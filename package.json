@@ -13,7 +13,7 @@
     "type": "git",
     "url": "git+https://github.com/Oleeesya/express-mesto-gha.git"
   },
-  "author": "",
+  "author": "oleeesya",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/Oleeesya/express-mesto-gha/issues"

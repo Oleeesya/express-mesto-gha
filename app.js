@@ -18,6 +18,7 @@ app.use((req, res, next) => {
 app.use(bodyParser.json());
 
 app.use('/users', require('./routes/users'));
+app.use('/cards', require('./routes/cards'));
 
 // подключаемся к серверу mongo
 mongoose.connect('mongodb://localhost:27017/mestodb', {
