@@ -1,4 +1,3 @@
-/* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 const Card = require('../models/card');
 const { NOT_FOUND, BAD_REQUEST, INTERNAL_ERROR } = require('./consts');
 
@@ -31,6 +30,8 @@ module.exports.removeCard = (req, res) => {
     .then((card) => res.send({ data: card }))
     .catch((err) => {
       if (err.name === 'CastError') {
+        res.status(BAD_REQUEST).send({ message: 'Передан несуществующий _id карточки' });
+      } if (err.name === 'ValidationError') {
         res.status(NOT_FOUND).send({ message: 'Передан несуществующий _id карточки' });
       } else {
         res.status(INTERNAL_ERROR).send({ message: 'Произошла ошибка' });
@@ -49,6 +50,8 @@ module.exports.putLikeCard = (req, res) => {
     .catch((err) => {
       if (err.name === 'CastError') {
         res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные для постановки лайка' });
+      } if (err.name === 'ValidationError') {
+        res.status(NOT_FOUND).send({ message: 'Передан несуществующий _id карточки' });
       } else {
         res.status(INTERNAL_ERROR).send({ message: 'Произошла ошибка' });
       }
@@ -66,6 +69,8 @@ module.exports.deleteLikeCard = (req, res) => {
     .catch((err) => {
       if (err.name === 'CastError') {
         res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные для снятия лайка' });
+      } if (err.name === 'ValidationError') {
+        res.status(NOT_FOUND).send({ message: 'Передан несуществующий _id карточки' });
       } else {
         res.status(INTERNAL_ERROR).send({ message: 'Произошла ошибка' });
       }

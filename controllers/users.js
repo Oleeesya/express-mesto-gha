@@ -1,5 +1,5 @@
-/* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 const User = require('../models/user');
+const { NOT_FOUND, BAD_REQUEST, INTERNAL_ERROR } = require('./consts');
 
 // возвращает всех пользователей
 module.exports.getUsers = (req, res) => {
@@ -7,20 +7,22 @@ module.exports.getUsers = (req, res) => {
     .then((user) => {
       res.send({ data: user });
     })
-    .catch(() => { res.status(500).send({ message: 'Произошла ошибка' }); });
+    .catch(() => { res.status(INTERNAL_ERROR).send({ message: 'Произошла ошибка' }); });
 };
 
 // возвращает пользователей по _id
 module.exports.getUserById = (req, res) => {
-  User.findById(req.user._id)
+  User.findById(req.params.userId)
     .then((user) => {
       res.send({ data: user });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(404).send({ message: 'Пользователь по указанному _id не найден' });
+        res.status(NOT_FOUND).send({ message: 'Пользователь по указанному _id не найден' });
+      } else if (err.name === 'ValidationError') {
+        res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные _id' });
       } else {
-        res.status(500).send({ message: 'Произошла ошибка' });
+        res.status(INTERNAL_ERROR).send({ message: 'Произошла ошибка' });
       }
     });
 };
@@ -33,9 +35,9 @@ module.exports.createUser = (req, res) => {
     .then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(400).send({ message: 'Переданы некорректные данные при создании пользователя' });
+        res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании пользователя' });
       } else {
-        res.status(500).send({ message: 'Произошла ошибка' });
+        res.status(INTERNAL_ERROR).send({ message: 'Произошла ошибка' });
       }
     });
 };
@@ -57,9 +59,9 @@ module.exports.updateProfile = (req, res) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(400).send({ message: 'Переданы некорректные данные при обновлении профиля' });
+        res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении профиля' });
       } else {
-        res.status(500).send({ message: 'Произошла ошибка' });
+        res.status(INTERNAL_ERROR).send({ message: 'Произошла ошибка' });
       }
     });
 };
@@ -80,9 +82,9 @@ module.exports.updateAvatar = (req, res) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(400).send({ message: 'Переданы некорректные данные при обновлении аватара' });
+        res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении аватара' });
       } else {
-        res.status(500).send({ message: 'Произошла ошибка' });
+        res.status(INTERNAL_ERROR).send({ message: 'Произошла ошибка' });
       }
     });
 };

@@ -1,6 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const process = require('process');
+const { NOT_FOUND } = require('./controllers/consts');
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -19,6 +21,11 @@ app.use(bodyParser.json());
 
 app.use('/users', require('./routes/users'));
 app.use('/cards', require('./routes/cards'));
+
+app.use((req, res, next) => {
+  // Ошибка!
+  next(res.status(NOT_FOUND).send({ message: 'Передан неправильный путь' }));
+});
 
 // подключаемся к серверу mongo
 mongoose.connect('mongodb://localhost:27017/mestodb', {
