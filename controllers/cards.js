@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const Card = require('../models/card');
-const { NOT_FOUND, BAD_REQUEST, INTERNAL_ERROR } = require('./consts');
+const { NOT_FOUND, BAD_REQUEST, INTERNAL_ERROR } = require('../utils/consts');
 
 // возвращает все карточки
 module.exports.getCards = (req, res) => {
@@ -11,8 +11,9 @@ module.exports.getCards = (req, res) => {
 
 // создаёт карточку
 module.exports.createCard = (req, res) => {
+  const creatorId = req.user._id;
   const { name, link } = req.body;
-  Card.create({ name, link })
+  Card.create({ name, link, owner: creatorId })
     .then((card) => {
       res.send({ data: card });
     })
@@ -39,20 +40,21 @@ module.exports.removeCard = (req, res) => {
       }
       res.send({ data: card });
     })
-    .catch((err) => {
+    .catch(() => {
       res.status(INTERNAL_ERROR).send({ message: 'Произошла ошибка' });
     });
 };
 
 // поставить лайк карточке
 module.exports.putLikeCard = (req, res) => {
+  const creatorId = req.user._id;
   if (!mongoose.isValidObjectId(req.params.cardsId)) {
     res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные id для постановки лайка' });
     return;
   }
   Card.findByIdAndUpdate(
     req.params.cardsId,
-    { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
+    { $addToSet: { likes: creatorId } }, // добавить _id в массив, если его там нет
     { new: true },
   )
     .then((card) => {
@@ -62,7 +64,7 @@ module.exports.putLikeCard = (req, res) => {
       }
       res.send({ data: card });
     })
-    .catch((err) => {
+    .catch(() => {
       res.status(INTERNAL_ERROR).send({ message: 'Произошла ошибка' });
     });
 };
@@ -85,7 +87,7 @@ module.exports.deleteLikeCard = (req, res) => {
       }
       res.send({ data: card });
     })
-    .catch((err) => {
+    .catch(() => {
       res.status(INTERNAL_ERROR).send({ message: 'Произошла ошибка' });
     });
 };

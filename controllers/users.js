@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const User = require('../models/user');
-const { NOT_FOUND, BAD_REQUEST, INTERNAL_ERROR } = require('./consts');
+const { NOT_FOUND, BAD_REQUEST, INTERNAL_ERROR } = require('../utils/consts');
 
 // возвращает всех пользователей
 module.exports.getUsers = (req, res) => {
@@ -25,7 +25,7 @@ module.exports.getUserById = (req, res) => {
       }
       res.send({ data: user });
     })
-    .catch((err) => {
+    .catch(() => {
       res.status(INTERNAL_ERROR).send({ message: 'Произошла ошибка' });
     });
 };
@@ -54,7 +54,6 @@ module.exports.updateProfile = (req, res) => {
     {
       new: true, // обработчик then получит на вход обновлённую запись
       runValidators: true, // данные будут валидированы перед изменением
-      upsert: true, // если пользователь не найден, он будет создан
     },
   )
     .then((user) => {
@@ -77,7 +76,6 @@ module.exports.updateAvatar = (req, res) => {
     {
       new: true, // обработчик then получит на вход обновлённую запись
       runValidators: true, // данные будут валидированы перед изменением
-      upsert: true, // если пользователь не найден, он будет создан
     },
   )
     .then((user) => {

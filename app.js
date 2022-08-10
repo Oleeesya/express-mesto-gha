@@ -2,7 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const process = require('process');
-const { NOT_FOUND } = require('./controllers/consts');
+const { NOT_FOUND } = require('./utils/consts');
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -22,9 +22,9 @@ app.use(bodyParser.json());
 app.use('/users', require('./routes/users'));
 app.use('/cards', require('./routes/cards'));
 
-app.use((req, res, next) => {
+app.use((req, res) => {
   // Ошибка!
-  next(res.status(NOT_FOUND).send({ message: 'Передан неправильный путь' }));
+  res.status(NOT_FOUND).send({ message: 'Передан неправильный путь' });
 });
 
 // подключаемся к серверу mongo
