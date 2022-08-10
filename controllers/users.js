@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const User = require('../models/user');
 const { NOT_FOUND, BAD_REQUEST, INTERNAL_ERROR } = require('./consts');
 
@@ -12,18 +13,20 @@ module.exports.getUsers = (req, res) => {
 
 // возвращает пользователей по _id
 module.exports.getUserById = (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.userId)) {
+    res.status(BAD_REQUEST).send({ message: 'Пользователь с некорректными данными _id' });
+    return;
+  }
   User.findById(req.params.userId)
     .then((user) => {
+      if (user === null) {
+        res.status(NOT_FOUND).send({ message: 'Переданы несуществующий _id' });
+        return;
+      }
       res.send({ data: user });
     })
     .catch((err) => {
-      if (err.name === 'CastError') {
-        res.status(BAD_REQUEST).send({ message: 'Пользователь по указанному _id не найден' });
-      } else if (err.name === 'ValidationError') {
-        res.status(NOT_FOUND).send({ message: 'Переданы некорректные данные _id' });
-      } else {
-        res.status(INTERNAL_ERROR).send({ message: 'Произошла ошибка' });
-      }
+      res.status(INTERNAL_ERROR).send({ message: 'Произошла ошибка' });
     });
 };
 

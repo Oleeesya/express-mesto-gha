@@ -29,10 +29,12 @@ module.exports.removeCard = (req, res) => {
   Card.findByIdAndRemove(req.params.cardsId)
     .then((card) => res.send({ data: card }))
     .catch((err) => {
+      console.log(err.name);
+
       if (err.name === 'CastError') {
         res.status(NOT_FOUND).send({ message: 'Передан несуществующий _id карточки' });
       } else if (err.name === 'ValidationError') {
-        res.status(BAD_REQUEST).send({ message: 'Передан несуществующий _id карточки' });
+        res.status(BAD_REQUEST).send({ message: 'Передан некорректный _id карточки' });
       } else {
         res.status(INTERNAL_ERROR).send({ message: 'Произошла ошибка' });
       }
@@ -46,7 +48,10 @@ module.exports.putLikeCard = (req, res) => {
     { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
     { new: true },
   )
-    .then((card) => res.send({ data: card }))
+    .then((card) => {
+      console.log(card);
+      res.send({ data: card });
+    })
     .catch((err) => {
       if (err.name === 'CastError') {
         res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные для постановки лайка' });
