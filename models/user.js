@@ -1,10 +1,6 @@
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-  // _id: {
-  //   type: String,
-  //   minlength: 15,
-  // },
   name: {
     type: String,
     minlength: 2,
