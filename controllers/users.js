@@ -1,3 +1,5 @@
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const User = require('../models/user');
 const { NOT_FOUND, BAD_REQUEST, INTERNAL_ERROR } = require('../utils/consts');
@@ -32,14 +34,31 @@ module.exports.getUserById = (req, res) => {
 
 // создает пользователей
 module.exports.createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
-  User.create({ name, about, avatar })
-    // вернем записанные в базу данные
-    .then((user) => res.send({ data: user }))
+  // хешируем пароль
+  bcrypt.hash(req.body.password, 10)
+    .then(hash => User.create({
+      name: req.body.name,
+      about: req.body.about,
+      avatar: req.body.avatar,
+      email: req.body.email,
+      password: hash, // записываем хеш в базу
+    })
+    )
+    .then((user) => {
+      res.status(201).send({
+        _id: user._id,
+        email: user.email,
+      });
+    })
     .catch((err) => {
+      console.log("!!!!!!!! err", err.name)
       if (err.name === 'ValidationError') {
         res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании пользователя' });
-      } else {
+      }
+      else if (err.name === 'MongoServerError') {
+        res.status(BAD_REQUEST).send({ message: 'Пользователь с такими данными уже существует' });
+      }
+      else {
         res.status(INTERNAL_ERROR).send({ message: 'Произошла ошибка' });
       }
     });
@@ -68,6 +87,14 @@ module.exports.updateProfile = (req, res) => {
     });
 };
 
+// возвращает информацию о текущем пользователе
+
+
+
+
+
+
+
 // обновляет аватар
 module.exports.updateAvatar = (req, res) => {
   User.findByIdAndUpdate(
@@ -89,3 +116,27 @@ module.exports.updateAvatar = (req, res) => {
       }
     });
 };
+
+// аутентификация — по адресу почты и паролю 
+// получаем из запроса почту и пароль и проверяем их
+module.exports.login = (req, res) => {
+  const { email, password } = req.body;
+
+  return User.findUserByCredentials(email, password)
+    .then((user) => {
+      // аутентификация успешна! пользователь в переменной user
+      // создадим токен
+      // Пейлоуд токена — зашифрованный в строку объект пользователя.
+      // Методу sign мы передали два аргумента: пейлоуд токена и секретный ключ подписи:
+      const token = jwt.sign({ _id: user._id }, 'some-secret-key', { expiresIn: '7d' });
+
+      // вернём токен
+      res.send({ token });
+    })
+    .catch((err) => {
+      // ошибка аутентификации
+      res
+        .status(401)
+        .send({ message: err.message });
+    });
+}; 

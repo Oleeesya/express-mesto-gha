@@ -2,6 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const process = require('process');
+const { login, createUser } = require('./controllers/users');
+const auth = require('./middlewares/auth');
 const { NOT_FOUND } = require('./utils/consts');
 
 const { PORT = 3000 } = process.env;
@@ -19,8 +21,13 @@ app.use((req, res, next) => {
 
 app.use(bodyParser.json());
 
-app.use('/users', require('./routes/users'));
-app.use('/cards', require('./routes/cards'));
+app.use('/users',auth, require('./routes/users'));
+
+// сначала вызовется auth, а затем,
+app.use('/cards', auth, require('./routes/cards'));
+
+app.post('/signin', login);
+app.post('/signup', createUser);
 
 app.use((req, res) => {
   // Ошибка!

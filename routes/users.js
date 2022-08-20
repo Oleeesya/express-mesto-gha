@@ -14,11 +14,15 @@ router.get('/', getUsers);
 // возвращает пользователей по _id
 router.get('/:userId', getUserById);
 
-// создает пользователей
-router.post('/', createUser);
+//удалить
+// // создает пользователей
+// router.post('/', createUser);
 
 // обновляет профиль
 router.patch('/me', updateProfile);
+
+// // возвращает информацию о текущем пользователе
+// router.patch('/me', infoProfile);
 
 // обновляет аватар
 router.patch('/me/avatar', updateAvatar);
