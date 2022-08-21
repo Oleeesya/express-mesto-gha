@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 const Card = require('../models/card');
-const { NOT_FOUND, BAD_REQUEST, INTERNAL_ERROR } = require('../utils/consts');
+const {
+  NOT_FOUND,
+  BAD_REQUEST,
+  INTERNAL_ERROR,
+  FORBIDDEN,
+} = require('../utils/consts');
 
 // возвращает все карточки
 module.exports.getCards = (req, res) => {
@@ -11,13 +16,10 @@ module.exports.getCards = (req, res) => {
 
 // создаёт карточку
 module.exports.createCard = (req, res) => {
-  const creatorId = req.user._id;
-  const { name, link } = req.body;
-
   Card.create({
     name: req.body.name,
     link: req.body.link,
-    owner: req.user._id // используем req.user 
+    owner: req.user._id, // используем req.user
   })
     .then((card) => {
       res.send({ data: card });
@@ -37,14 +39,24 @@ module.exports.removeCard = (req, res) => {
     res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные id' });
     return;
   }
-  Card.findByIdAndRemove(req.params.cardsId)
+
+  Card.findById(req.params.cardsId)
     .then((card) => {
       if (card === null) {
         res.status(NOT_FOUND).send({ message: 'Передан несуществующий _id карточки' });
         return;
       }
-      res.send({ data: card });
+
+      if (card.owner.toString() !== req.user._id) {
+        res.status(FORBIDDEN).send({ message: 'Вы не можете удалить чужую карточку' });
+        return;
+      }
+      Card.findByIdAndRemove(req.params.cardsId)
+        .then((removeCard) => {
+          res.send({ data: removeCard });
+        });
     })
+
     .catch(() => {
       res.status(INTERNAL_ERROR).send({ message: 'Произошла ошибка' });
     });

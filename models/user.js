@@ -35,8 +35,8 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true,
     validate: {
-      validator(v) { 
-        return validator.isEmail(v)
+      validator(v) {
+        return validator.isEmail(v);
       },
       message: 'Неправильный формат почты',
     },
@@ -45,7 +45,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     minlength: 8,
-    select: false, //хеш пароля пользователя не будет возвращаться из базы
+    select: false, // хеш пароля пользователя не будет возвращаться из базы
   },
 });
 

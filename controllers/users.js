@@ -36,14 +36,13 @@ module.exports.getUserById = (req, res) => {
 module.exports.createUser = (req, res) => {
   // хешируем пароль
   bcrypt.hash(req.body.password, 10)
-    .then(hash => User.create({
+    .then((hash) => User.create({
       name: req.body.name,
       about: req.body.about,
       avatar: req.body.avatar,
       email: req.body.email,
       password: hash, // записываем хеш в базу
-    })
-    )
+    }))
     .then((user) => {
       res.status(201).send({
         _id: user._id,
@@ -51,14 +50,11 @@ module.exports.createUser = (req, res) => {
       });
     })
     .catch((err) => {
-      console.log("!!!!!!!! err", err.name)
       if (err.name === 'ValidationError') {
         res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании пользователя' });
-      }
-      else if (err.name === 'MongoServerError') {
+      } else if (err.name === 'MongoServerError') {
         res.status(BAD_REQUEST).send({ message: 'Пользователь с такими данными уже существует' });
-      }
-      else {
+      } else {
         res.status(INTERNAL_ERROR).send({ message: 'Произошла ошибка' });
       }
     });
@@ -88,12 +84,19 @@ module.exports.updateProfile = (req, res) => {
 };
 
 // возвращает информацию о текущем пользователе
-
-
-
-
-
-
+module.exports.getCurrebtUserInfo = (req, res) => {
+  User.findById(req.user._id)
+    .then((user) => {
+      if (user === null) {
+        res.status(NOT_FOUND).send({ message: 'Переданы несуществующий _id' });
+        return;
+      }
+      res.send({ data: user });
+    })
+    .catch(() => {
+      res.status(INTERNAL_ERROR).send({ message: 'Произошла ошибка' });
+    });
+};
 
 // обновляет аватар
 module.exports.updateAvatar = (req, res) => {
@@ -117,7 +120,7 @@ module.exports.updateAvatar = (req, res) => {
     });
 };
 
-// аутентификация — по адресу почты и паролю 
+// аутентификация — по адресу почты и паролю
 // получаем из запроса почту и пароль и проверяем их
 module.exports.login = (req, res) => {
   const { email, password } = req.body;
@@ -139,4 +142,4 @@ module.exports.login = (req, res) => {
         .status(401)
         .send({ message: err.message });
     });
-}; 
+};
