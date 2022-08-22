@@ -27,7 +27,7 @@ module.exports.getUserById = (req, res, next) => {
   User.findById(req.params.userId)
     .then((user) => {
       if (user === null) {
-        throw new NOT_FOUND('Переданы несуществующий123123123 _id');
+        throw new NOT_FOUND('Переданы несуществующий _id');
       }
       res.send({ data: user });
     })
