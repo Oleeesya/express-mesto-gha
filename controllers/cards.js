@@ -1,17 +1,21 @@
 const mongoose = require('mongoose');
 const Card = require('../models/card');
+
+const {
+  BAD_REQUEST,
+} = require('../utils/errors/bad_request');
 const {
   NOT_FOUND,
-  BAD_REQUEST,
-  INTERNAL_ERROR,
+} = require('../utils/errors/not_found');
+const {
   FORBIDDEN,
-} = require('../utils/consts');
+} = require('../utils/errors/forbidden');
 
 // возвращает все карточки
 module.exports.getCards = (req, res) => {
   Card.find({})
     .then((card) => res.send({ data: card }))
-    .catch(() => res.status(INTERNAL_ERROR).send({ message: 'Произошла ошибка' }));
+    .catch(() => res.status(500).send({ message: 'Произошла ошибка' }));
 };
 
 // создаёт карточку
@@ -26,48 +30,40 @@ module.exports.createCard = (req, res) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании карточки' });
+        res.status(400).send({ message: 'Переданы некорректные данные при создании карточки' });
       } else {
-        res.status(INTERNAL_ERROR).send({ message: 'Произошла ошибка' });
+        res.status(500).send({ message: 'Произошла ошибка' });
       }
     });
 };
 
 // удаляет карточку по идентификатору
-module.exports.removeCard = (req, res) => {
+module.exports.removeCard = (req, res, next) => {
   if (!mongoose.isValidObjectId(req.params.cardsId)) {
-    res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные id' });
-    return;
+    throw new BAD_REQUEST('Переданы некорректные данные id');
   }
 
   Card.findById(req.params.cardsId)
     .then((card) => {
       if (card === null) {
-        res.status(NOT_FOUND).send({ message: 'Передан несуществующий _id карточки' });
-        return;
+        throw new NOT_FOUND('Передан несуществующий _id карточки');
       }
-
       if (card.owner.toString() !== req.user._id) {
-        res.status(FORBIDDEN).send({ message: 'Вы не можете удалить чужую карточку' });
-        return;
+        throw new FORBIDDEN('Вы не можете удалить чужую карточку');
       }
       Card.findByIdAndRemove(req.params.cardsId)
         .then((removeCard) => {
           res.send({ data: removeCard });
         });
     })
-
-    .catch(() => {
-      res.status(INTERNAL_ERROR).send({ message: 'Произошла ошибка' });
-    });
+    .catch(next);
 };
 
 // поставить лайк карточке
-module.exports.putLikeCard = (req, res) => {
+module.exports.putLikeCard = (req, res, next) => {
   const creatorId = req.user._id;
   if (!mongoose.isValidObjectId(req.params.cardsId)) {
-    res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные id для постановки лайка' });
-    return;
+    throw new BAD_REQUEST('Переданы некорректные данные id');
   }
   Card.findByIdAndUpdate(
     req.params.cardsId,
@@ -76,21 +72,17 @@ module.exports.putLikeCard = (req, res) => {
   )
     .then((card) => {
       if (card === null) {
-        res.status(NOT_FOUND).send({ message: 'Передан несуществующий _id карточки' });
-        return;
+        throw new NOT_FOUND('Передан несуществующий _id карточки');
       }
       res.send({ data: card });
     })
-    .catch(() => {
-      res.status(INTERNAL_ERROR).send({ message: 'Произошла ошибка' });
-    });
+    .catch(next);
 };
 
 // убрать лайк с карточки
-module.exports.deleteLikeCard = (req, res) => {
+module.exports.deleteLikeCard = (req, res, next) => {
   if (!mongoose.isValidObjectId(req.params.cardsId)) {
-    res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные id для постановки лайка' });
-    return;
+    throw new BAD_REQUEST('Переданы некорректные данные id');
   }
   Card.findByIdAndUpdate(
     req.params.cardsId,
@@ -99,12 +91,9 @@ module.exports.deleteLikeCard = (req, res) => {
   )
     .then((card) => {
       if (card === null) {
-        res.status(NOT_FOUND).send({ message: 'Передан несуществующий _id карточки' });
-        return;
+        throw new NOT_FOUND('Передан несуществующий _id карточки');
       }
       res.send({ data: card });
     })
-    .catch(() => {
-      res.status(INTERNAL_ERROR).send({ message: 'Произошла ошибка' });
-    });
+    .catch(next);
 };

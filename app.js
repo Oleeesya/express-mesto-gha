@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const process = require('process');
 const { login, createUser, getCurrebtUserInfo } = require('./controllers/users');
 const auth = require('./middlewares/auth');
-const { NOT_FOUND } = require('./utils/consts');
+// const { errors } = require('celebrate');
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -22,7 +22,7 @@ app.get('/me', auth, getCurrebtUserInfo);
 
 app.use((req, res) => {
   // Ошибка!
-  res.status(NOT_FOUND).send({ message: 'Передан неправильный путь' });
+  res.status(404).send({ message: 'Передан неправильный путь' });
 });
 
 // подключаемся к серверу mongo
@@ -31,6 +31,12 @@ mongoose.connect('mongodb://localhost:27017/mestodb', {
   // не поддерживаются:
   // useCreateIndex: true,
   // useFindAndModify: false,
+});
+
+// app.use(errors()); // обработчик ошибок celebrate
+
+app.use((err, req, res) => {
+  res.status(err.statusCode).send({ message: err.message });
 });
 
 app.listen(PORT, () => {
