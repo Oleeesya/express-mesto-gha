@@ -50,6 +50,9 @@ module.exports.createUser = (req, res) => {
       res.status(201).send({
         _id: user._id,
         email: user.email,
+        name: user.name,
+        about: user.about,
+        avatar: user.avatar,
       });
     })
     .catch((err) => {
