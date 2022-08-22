@@ -2,11 +2,10 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const process = require('process');
+const { celebrate, Joi } = require('celebrate');
+const { errors } = require('celebrate');
 const { login, createUser, getCurrebtUserInfo } = require('./controllers/users');
 const auth = require('./middlewares/auth');
-const { errors } = require('celebrate');
-const { celebrate, Joi } = require('celebrate');
-
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -24,7 +23,7 @@ app.post('/signup', celebrate({
   body: Joi.object().keys({
     name: Joi.string().required().min(2).max(30),
     about: Joi.string().required().min(2).max(30),
-    avatar: Joi.string().regex(/[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)?/i).required(),
+    avatar: Joi.string().regex(/[-a-zA-Z0-9@:%._~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_.~#?&//=]*)?/i).required(),
     email: Joi.string().required().email(),
     password: Joi.string().required().min(8),
   }),
