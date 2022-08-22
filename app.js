@@ -12,6 +12,8 @@ const app = express();
 
 app.use(bodyParser.json());
 
+app.get('/users/me', auth, getCurrebtUserInfo);
+
 app.use('/users', auth, require('./routes/users'));
 
 // сначала вызовется auth, а затем,
@@ -33,8 +35,6 @@ app.post('/signup', celebrate({
     password: Joi.string().required().min(8),
   }).unknown(true),
 }), createUser);
-
-app.get('/users/me', auth, getCurrebtUserInfo);
 
 app.use((req, res) => {
   // Ошибка!
