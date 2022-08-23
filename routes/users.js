@@ -14,6 +14,8 @@ const {
 // возвращает всех пользователей
 router.get('/', getUsers);
 
+router.get('/me', auth, getCurrebtUserInfo);
+
 // возвращает пользователей по _id
 router.get('/:userId', celebrate({
   params: Joi.object().keys({
@@ -35,7 +37,5 @@ router.patch('/me/avatar', celebrate({
     avatar: Joi.string().regex(linkRegex),
   }),
 }), updateAvatar);
-
-router.get('/me', auth, getCurrebtUserInfo);
 
 module.exports = router;
