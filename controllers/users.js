@@ -1,29 +1,28 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const mongoose = require('mongoose');
 const User = require('../models/user');
 
 const {
-  BAD_REQUEST,
-} = require('../utils/errors/bad_request');
-const {
   NOT_FOUND,
 } = require('../utils/errors/not_found');
+const {
+  CONFLICT,
+} = require('../utils/errors/conflict');
+const {
+  UNAUTHORIZED,
+} = require('../utils/errors/unauthorized');
 
 // возвращает всех пользователей
-module.exports.getUsers = (req, res) => {
+module.exports.getUsers = (req, res, next) => {
   User.find({})
     .then((user) => {
       res.send({ data: user });
     })
-    .catch(() => { res.status(500).send({ message: 'Произошла ошибка' }); });
+    .catch(next);
 };
 
 // возвращает пользователей по _id
 module.exports.getUserById = (req, res, next) => {
-  if (!mongoose.isValidObjectId(req.params.userId)) {
-    throw new BAD_REQUEST('Пользователь с некорректными данными _id');
-  }
   User.findById(req.params.userId)
     .then((user) => {
       if (user === null) {
@@ -35,7 +34,7 @@ module.exports.getUserById = (req, res, next) => {
 };
 
 // создает пользователей
-module.exports.createUser = (req, res) => {
+module.exports.createUser = (req, res, next) => {
   // хешируем пароль
   bcrypt.hash(req.body.password, 10)
     .then((hash) => User.create({
@@ -56,18 +55,16 @@ module.exports.createUser = (req, res) => {
       });
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(400).send({ message: 'Переданы некорректные данные при создании пользователя' });
-      } else if (err.code === 11000) {
-        res.status(409).send({ message: 'Пользователь с таким email уже существует' });
+      if (err.code === 11000) {
+        next(new CONFLICT('Пользователь с таким email уже существует'));
       } else {
-        res.status(500).send({ message: 'Произошла ошибка' });
+        next(err);
       }
     });
 };
 
 // обновляет профиль
-module.exports.updateProfile = (req, res) => {
+module.exports.updateProfile = (req, res, next) => {
   User.findByIdAndUpdate(
     req.user._id,
     { ...req.body },
@@ -80,13 +77,7 @@ module.exports.updateProfile = (req, res) => {
     .then((user) => {
       res.send({ data: user });
     })
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(400).send({ message: 'Переданы некорректные данные при обновлении профиля' });
-      } else {
-        res.status(500).send({ message: 'Произошла ошибка' });
-      }
-    });
+    .catch(next);
 };
 
 // возвращает информацию о текущем пользователе
@@ -102,7 +93,7 @@ module.exports.getCurrebtUserInfo = (req, res, next) => {
 };
 
 // обновляет аватар
-module.exports.updateAvatar = (req, res) => {
+module.exports.updateAvatar = (req, res, next) => {
   User.findByIdAndUpdate(
     req.user._id,
     { ...req.body },
@@ -114,18 +105,12 @@ module.exports.updateAvatar = (req, res) => {
     .then((user) => {
       res.send({ data: user });
     })
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(400).send({ message: 'Переданы некорректные данные при обновлении аватара' });
-      } else {
-        res.status(500).send({ message: 'Произошла ошибка' });
-      }
-    });
+    .catch(next);
 };
 
 // аутентификация — по адресу почты и паролю
 // получаем из запроса почту и пароль и проверяем их
-module.exports.login = (req, res) => {
+module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
 
   return User.findUserByCredentials(email, password)
@@ -141,8 +126,6 @@ module.exports.login = (req, res) => {
     })
     .catch((err) => {
       // ошибка аутентификации
-      res
-        .status(401)
-        .send({ message: err.message });
+      next(new UNAUTHORIZED(err.message));
     });
 };

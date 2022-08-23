@@ -2,44 +2,25 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const process = require('process');
-const { celebrate, Joi } = require('celebrate');
 const { errors } = require('celebrate');
-const { login, createUser, getCurrebtUserInfo } = require('./controllers/users');
 const auth = require('./middlewares/auth');
+const {
+  NOT_FOUND,
+} = require('./utils/errors/not_found');
 
 const { PORT = 3000 } = process.env;
 const app = express();
 
 app.use(bodyParser.json());
 
-app.get('/users/me', auth, getCurrebtUserInfo);
-
 app.use('/users', auth, require('./routes/users'));
 
 // сначала вызовется auth, а затем,
 app.use('/cards', auth, require('./routes/cards'));
 
-app.post('/signin', celebrate({
-  body: Joi.object().keys({
-    email: Joi.string().required().email(),
-    password: Joi.string().required().min(8),
-  }).unknown(true),
-}), login);
+app.use('/', require('./routes/index'));
 
-app.post('/signup', celebrate({
-  body: Joi.object().keys({
-    name: Joi.string().min(2).max(30),
-    about: Joi.string().min(2).max(30),
-    avatar: Joi.string().regex(/[-a-zA-Z0-9@:%._~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_.~#?&//=]*)?/i),
-    email: Joi.string().required().email(),
-    password: Joi.string().required().min(8),
-  }).unknown(true),
-}), createUser);
-
-app.use((req, res) => {
-  // Ошибка!
-  res.status(404).send({ message: 'Передан неправильный путь' });
-});
+app.use(auth, (req, res, next) => next(new NOT_FOUND('Передан неправильный путь')));
 
 // подключаемся к серверу mongo
 mongoose.connect('mongodb://localhost:27017/mestodb', {
@@ -52,7 +33,9 @@ mongoose.connect('mongodb://localhost:27017/mestodb', {
 app.use(errors()); // обработчик ошибок celebrate
 
 app.use((err, req, res, next) => {
-  res.status(err.statusCode).send({ message: err.message });
+  const statusCode = err.statusCode || 500;
+  const message = statusCode === 500 ? 'На сервере произошла ошибка' : err.message;
+  res.status(statusCode).send({ message });
   next();
 });
 

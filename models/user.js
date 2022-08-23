@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
+const { linkRegex } = require('../utils/const');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -27,6 +28,7 @@ const userSchema = new mongoose.Schema({
   },
   avatar: {
     type: String,
+    match: linkRegex,
     default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
     required: false,
   },
@@ -44,7 +46,6 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
-    minlength: 8,
     select: false, // хеш пароля пользователя не будет возвращаться из базы
   },
 });
