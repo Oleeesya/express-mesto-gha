@@ -5,6 +5,9 @@ const {
 const {
   FORBIDDEN,
 } = require('../utils/errors/forbidden');
+const {
+  BAD_REQUEST,
+} = require('../utils/errors/bad_request');
 
 // возвращает все карточки
 module.exports.getCards = (req, res, next) => {
@@ -23,7 +26,13 @@ module.exports.createCard = (req, res, next) => {
     .then((card) => {
       res.send({ data: card });
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new BAD_REQUEST('Некорректные данные при создании карточки'));
+      } else {
+        next(err);
+      }
+    });
 };
 
 // удаляет карточку по идентификатору

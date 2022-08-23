@@ -11,6 +11,9 @@ const {
 const {
   UNAUTHORIZED,
 } = require('../utils/errors/unauthorized');
+const {
+  BAD_REQUEST,
+} = require('../utils/errors/bad_request');
 
 // возвращает всех пользователей
 module.exports.getUsers = (req, res, next) => {
@@ -57,6 +60,8 @@ module.exports.createUser = (req, res, next) => {
     .catch((err) => {
       if (err.code === 11000) {
         next(new CONFLICT('Пользователь с таким email уже существует'));
+      } else if (err.name === 'ValidationError') {
+        next(new BAD_REQUEST('Некорректные данные при создании пользователя'));
       } else {
         next(err);
       }
@@ -77,7 +82,13 @@ module.exports.updateProfile = (req, res, next) => {
     .then((user) => {
       res.send({ data: user });
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new BAD_REQUEST('Некорректные данные при обновлении данных пользователя'));
+      } else {
+        next(err);
+      }
+    });
 };
 
 // возвращает информацию о текущем пользователе
@@ -105,7 +116,13 @@ module.exports.updateAvatar = (req, res, next) => {
     .then((user) => {
       res.send({ data: user });
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new BAD_REQUEST('Некорректные данные при обновлении аватара пользователя'));
+      } else {
+        next(err);
+      }
+    });
 };
 
 // аутентификация — по адресу почты и паролю
